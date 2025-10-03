@@ -11,6 +11,7 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: write
+            id-token: write # for trusted publishing
             pull-requests: write
         strategy:
             matrix:
@@ -30,4 +31,5 @@ jobs:
                   publish: npm run ci:publish
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                #   Delete because trusted publishing enabled
+                #   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
