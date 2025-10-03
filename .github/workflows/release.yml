@@ -25,6 +25,8 @@ jobs:
                 # ここでregistry-urlを設定する必要がある
                 # これにより、npm publishがOIDCトークンを使用するようになる
                 registry-url: https://registry.npmjs.org
+            - name: Install npm latest
+              run: npm install -g npm@latest
             - run: npm ci
             - name: Create Release Pull Request or Publish to npm
               id: changesets
