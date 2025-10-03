@@ -9,6 +9,9 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
     release:
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
         strategy:
             matrix:
                 node-version: [22.x]
