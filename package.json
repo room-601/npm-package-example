@@ -1,0 +1,22 @@
+{
+  "name": "npm-package-example",
+  "version": "1.0.0",
+  "description": "A simple example npm package",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "keywords": [],
+  "author": "KosukeTakahashi0410",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "ci:version": "changeset version",
+    "ci:publish": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7",
+    "typescript": "^5.9.3"
+  }
+}
