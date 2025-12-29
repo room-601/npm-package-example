@@ -1,0 +1,84 @@
+name: Pre-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      actions:
+        description: "Pre-release action"
+        required: true
+        default: chice
+        options:
+          - enter-and-publish
+          - exit
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  pre-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # for trusted publishing
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref }} # current branch
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node.js 20.15.1 for build # ビルド用にNode.js 20.15.1をセットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version # ノードのバージョンをファイルから取得
+
+      - name: install dependencies step
+        run: npm ci
+
+      - name: build step
+        run: npm run build
+
+      # ===============================
+      # Enter pre-release mode
+      # ===============================
+      - name: Enter pre-release mode
+        if: inputs.actions == 'enter-and-publish'
+        run: |
+          npm run changeset pre enter next
+          npm run changeset version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: pre-release"
+          git push
+
+      # publish用にNode.js 22.xをセットアップ（npm 11系が使える）
+      - name: Use Node.js 22.x for publish
+        if: inputs.actions == 'enter-and-publish'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          # ここでregistry-urlを設定する必要がある
+          # これにより、npm publishがOIDCトークンを使用するようになる
+          registry-url: https://registry.npmjs.org
+
+      - name: Install npm latest # for trusted publishing
+        if: inputs.actions == 'enter-and-publish'
+        run: npm install -g npm@latest
+
+      - name: Publish pre-release
+        if: inputs.actions == 'enter-and-publish'
+        run: |
+          npm run ci:publish
+
+      # ===============================
+      # Exit pre-release mode
+      # ===============================
+      - name: Exit pre-release mode
+        if: inputs.actions == 'exit'
+        run: |
+          npm run changeset pre exit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: exit pre-release"
+          git push
