@@ -1,0 +1,33 @@
+name: Release Trigger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      actions:
+        description: "Pre-release action"
+        required: true
+        type: choice
+        options:
+          - enter-and-publish
+          - exit
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/release.yml
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  pre-release:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/pre-release.yml
+    with:
+      actions: ${{ inputs.actions }}
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

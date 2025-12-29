@@ -1,15 +1,14 @@
 name: Pre-release
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       actions:
-        description: "Pre-release action"
         required: true
-        type: choice
-        options:
-          - enter-and-publish
-          - exit
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 

@@ -1,48 +1,50 @@
 name: Release
 
 on:
-    push:
-        branches: [main]
+  workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-    release:
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-            id-token: write # for trusted publishing
-            pull-requests: write
-        steps:
-            - uses: actions/checkout@v5
-              with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
-            # ビルド用にNode.js 20.15.1をセットアップ
-            - name: Use Node.js 20.15.1 for build
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20.15.1
-            - name: install dependencies step
-              run: npm ci
-            - name: build step
-              run: npm run build
-            # publish用にNode.js 22.xをセットアップ（npm 11系が使える）
-            - name: Use Node.js 22.x for publish
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 22.x
-                  # ここでregistry-urlを設定する必要がある
-                  # これにより、npm publishがOIDCトークンを使用するようになる
-                  registry-url: https://registry.npmjs.org
-            - name: Install npm latest # for trusted publishing
-              run: npm install -g npm@latest
-            - name: Create Release Pull Request or Publish to npm
-              id: changesets
-              uses: changesets/action@v1
-              with:
-                  version: npm run ci:version
-                  publish: npm run ci:publish
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                #   Delete because trusted publishing enabled
-                #   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # for trusted publishing
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # ビルド用にNode.js 20.15.1をセットアップ
+      - name: Use Node.js 20.15.1 for build
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.15.1
+      - name: install dependencies step
+        run: npm ci
+      - name: build step
+        run: npm run build
+      # publish用にNode.js 22.xをセットアップ（npm 11系が使える）
+      - name: Use Node.js 22.x for publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          # ここでregistry-urlを設定する必要がある
+          # これにより、npm publishがOIDCトークンを使用するようになる
+          registry-url: https://registry.npmjs.org
+      - name: Install npm latest # for trusted publishing
+        run: npm install -g npm@latest
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: npm run ci:version
+          publish: npm run ci:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #   Delete because trusted publishing enabled
+          #   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
