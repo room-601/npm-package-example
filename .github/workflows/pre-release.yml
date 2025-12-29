@@ -6,7 +6,7 @@ on:
       actions:
         description: "Pre-release action"
         required: true
-        default: chice
+        type: choice
         options:
           - enter-and-publish
           - exit
