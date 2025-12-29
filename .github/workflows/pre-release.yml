@@ -37,13 +37,30 @@ jobs:
       - name: build step
         run: npm run build
 
+      - name: Check for changeset files
+        id: check-changesets
+        run: |
+          if [ -z "$(find .changeset -name '*.md' -not -name 'README.md' 2>/dev/null)" ]; then
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "No changeset files found. Skipping version update."
+          else
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "Changeset files found. Proceeding with version update."
+          fi
+
       # ===============================
       # Enter pre-release mode
       # ===============================
       - name: Enter pre-release mode
-        if: inputs.actions == 'enter-and-publish'
+        if: inputs.actions == 'enter-and-publish' && steps.check-changesets.outputs.has_changesets == 'true'
         run: |
-          npx changeset pre enter next
+          # pre-release modeに入る
+          # すでにpre-releaseの場合はスキップする
+          if [ ! -f .changeset/pre-release.md ]; then
+            npx changeset pre enter next
+          else
+            echo "Already in pre-release mode"
+          fi
           npx changeset version
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -53,7 +70,7 @@ jobs:
 
       # publish用にNode.js 22.xをセットアップ（npm 11系が使える）
       - name: Use Node.js 22.x for publish
-        if: inputs.actions == 'enter-and-publish'
+        if: inputs.actions == 'enter-and-publish' && steps.check-changesets.outputs.has_changesets == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
@@ -62,11 +79,11 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install npm latest # for trusted publishing
-        if: inputs.actions == 'enter-and-publish'
+        if: inputs.actions == 'enter-and-publish' && steps.check-changesets.outputs.has_changesets == 'true'
         run: npm install -g npm@latest
 
       - name: Publish pre-release
-        if: inputs.actions == 'enter-and-publish'
+        if: inputs.actions == 'enter-and-publish' && steps.check-changesets.outputs.has_changesets == 'true'
         run: |
           npm run ci:publish
 
@@ -74,7 +91,7 @@ jobs:
       # Exit pre-release mode
       # ===============================
       - name: Exit pre-release mode
-        if: inputs.actions == 'exit'
+        if: inputs.actions == 'exit' && steps.check-changesets.outputs.has_changesets == 'true'
         run: |
           npx changeset pre exit
           git config user.name "github-actions[bot]"
