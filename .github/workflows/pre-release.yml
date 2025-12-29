@@ -56,7 +56,7 @@ jobs:
         run: |
           # pre-release modeに入る
           # すでにpre-releaseの場合はスキップする
-          if [ ! -f .changeset/pre-release.md ]; then
+          if [ ! -f .changeset/pre.md ]; then
             npx changeset pre enter next
           else
             echo "Already in pre-release mode"
@@ -64,9 +64,13 @@ jobs:
           npx changeset version
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "chore: pre-release"
-          git push
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "chore: pre-release"
+            git push
+          else
+            echo "No changes to commit"
+          fi
 
       # publish用にNode.js 22.xをセットアップ（npm 11系が使える）
       - name: Use Node.js 22.x for publish
