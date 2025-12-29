@@ -21,13 +21,9 @@ jobs:
   release:
     if: github.event_name == 'push'
     uses: ./.github/workflows/release.yml
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   pre-release:
     if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/pre-release.yml
     with:
       actions: ${{ inputs.actions }}
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
