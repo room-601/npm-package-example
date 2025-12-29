@@ -6,9 +6,6 @@ on:
       actions:
         required: true
         type: string
-    secrets:
-      GITHUB_TOKEN:
-        required: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
