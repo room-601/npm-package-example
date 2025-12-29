@@ -56,7 +56,7 @@ jobs:
         run: |
           # pre-release modeに入る
           # すでにpre-releaseの場合はスキップする
-          if [ ! -f .changeset/pre.md ]; then
+          if [ ! -f .changeset/pre.json ]; then
             npx changeset pre enter next
           else
             echo "Already in pre-release mode"
