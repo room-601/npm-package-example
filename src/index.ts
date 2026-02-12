@@ -1,10 +1,3 @@
-/**
- * Greet to the user
- */
-export function greet() {
-  return `Hello, world!`;
-}
-
-export function goodbye() {
-  return `Goodbye, world!`;
+export function add(a: number, b: number) {
+  return a + b;
 }

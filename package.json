@@ -1,5 +1,7 @@
 {
-  "name": "@kosuketakahashi0410/npm-package-example",
+  "author": "KosukeTakahashi0410",
+  "license": "MIT",
+  "name": "@room-601/npm-package-example",
   "version": "1.0.3",
   "description": "A simple example npm package",
   "main": "dist/index.js",
@@ -7,11 +9,10 @@
   "files": [
     "dist"
   ],
-  "keywords": [
-    "example"
-  ],
-  "author": "KosukeTakahashi0410",
-  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/room-601/npm-package-example.git"
@@ -26,8 +27,5 @@
     "@types/node": "^24.6.2",
     "typescript": "^5.9.3",
     "undici-types": "^7.13.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
