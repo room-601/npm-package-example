@@ -102,7 +102,7 @@ release-trigger.yml (エントリーポイント)
 ```diff
   @room-601:registry=https://npm.pkg.github.com
 - //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
-+ //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
++ //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN}
 ```
 
 #### 詳細説明
@@ -111,7 +111,7 @@ release-trigger.yml (エントリーポイント)
 
 1. **`actions/setup-node` との統合:**
    - `actions/setup-node` アクションは、`registry-url` を設定すると自動的に `.npmrc` ファイルを生成
-   - このアクションは慣習的に `NODE_AUTH_TOKEN` という環境変数名を使用
+   - このアクションは慣習的に `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` という環境変数名を使用
    - 標準的な命名規則に従うことで、他の開発者が設定を理解しやすくなる
 
 2. **GitHub Actions での動作:**
@@ -122,13 +122,13 @@ release-trigger.yml (エントリーポイント)
    ```
    上記の設定により、内部的に以下のような `.npmrc` が生成される：
    ```
-   //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+   //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN}
    ```
 
 3. **環境変数の設定:**
-   - GitHub Actions のワークフロー内で `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` を設定
+   - GitHub Actions のワークフロー内で `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` を設定
    - `GITHUB_TOKEN` は GitHub Actions が自動的に提供する一時トークン
-   - ワークフロー実行時に `NODE_AUTH_TOKEN` が `GITHUB_TOKEN` の値で置き換えられ、認証が行われる
+   - ワークフロー実行時に `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` が `GITHUB_TOKEN` の値で置き換えられ、認証が行われる
 
 **セキュリティへの影響:**
 - トークンはリポジトリにハードコードされず、環境変数として参照される
@@ -210,7 +210,7 @@ release-trigger.yml (エントリーポイント)
         publish: npm run ci:publish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-+       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++       GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 #### 詳細説明
@@ -251,9 +251,9 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
 ```
 
 **なぜ1回で良いか:**
-- GitHub Packages の認証は単純な環境変数（`NODE_AUTH_TOKEN`）で完結
+- GitHub Packages の認証は単純な環境変数（`GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN`）で完結
 - 特定の npm バージョンに依存しない
-- どの npm バージョンでも `NODE_AUTH_TOKEN` があれば認証可能
+- どの npm バージョンでも `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` があれば認証可能
 - OIDC のような複雑な認証メカニズムが不要
 
 **具体的な変更点:**
@@ -266,7 +266,7 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
 2. **`registry-url` と `scope` の追加:**
    - 最初のセットアップ時に registry 設定を含める
    - これにより、`actions/setup-node` が自動的に `.npmrc` を生成
-   - 生成される `.npmrc` には `NODE_AUTH_TOKEN` の参照が含まれる
+   - 生成される `.npmrc` には `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` の参照が含まれる
 
 3. **2回目のセットアップを削除:**
    - Node.js 22.x へのアップグレードが不要
@@ -308,7 +308,7 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 -     #   Delete because trusted publishing enabled
 -     #   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-+     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++     GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 #### 詳細説明
@@ -319,8 +319,8 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
 
 **環境変数の追加:**
 
-1. **`NODE_AUTH_TOKEN` の設定:**
-   - `${{ secrets.GITHUB_TOKEN }}` を `NODE_AUTH_TOKEN` 環境変数に代入
+1. **`GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` の設定:**
+   - `${{ secrets.GITHUB_TOKEN }}` を `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` 環境変数に代入
    - この環境変数は、最初のステップで `actions/setup-node` が生成した `.npmrc` 内で参照される
    - `npm publish` 実行時に、この値を使って GitHub Packages に認証される
 
@@ -339,9 +339,9 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
 ```
 1. actions/setup-node が .npmrc を生成（最初のセットアップ時）
    ↓
-2. .npmrc に ${NODE_AUTH_TOKEN} が含まれる
+2. .npmrc に ${GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN} が含まれる
    ↓
-3. Changesets アクションの env で NODE_AUTH_TOKEN に GITHUB_TOKEN を設定
+3. Changesets アクションの env で GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN に GITHUB_TOKEN を設定
    ↓
 4. npm publish 実行時に環境変数が展開される
    ↓
@@ -445,7 +445,7 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
     run: |
       npm run ci:publish
 +   env:
-+     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++     GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 #### 詳細説明
@@ -456,7 +456,7 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
 - 最初のセットアップで設定した registry 設定をそのまま使用
 
 **環境変数の追加:**
-- `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` を設定
+- `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` を設定
 - 最初のステップで生成された `.npmrc` を使用して認証
 - GitHub Packages への公開が可能に
 
@@ -522,7 +522,7 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
 
 **GitHub Actions の設定:**
 - 必要な権限の詳細説明（`contents: write`, `packages: write`, `pull-requests: write`）
-- 認証メカニズムの説明（`GITHUB_TOKEN` と `NODE_AUTH_TOKEN`）
+- 認証メカニズムの説明（`GITHUB_TOKEN` と `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN`）
 - 追加のシークレット設定が不要であることを強調
 
 **4. パッケージ設定 (📋 パッケージ設定)**
@@ -563,7 +563,7 @@ npm Trusted Publishing から GitHub Packages への移行により、Node.js �
 | 認証方式 | OIDC (Trusted Publishing) | GitHub Token |
 | アクセス制御 | `"access": "public"` | `"access": "restricted"` |
 | GitHub Actions 権限 | `id-token: write` | `packages: write` |
-| 環境変数 | 不要 | `NODE_AUTH_TOKEN` |
+| 環境変数 | 不要 | `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` |
 
 **GitHub Packages のメリット:**
 - ✅ デフォルトでプライベート - 内部パッケージのセキュリティ向上
@@ -617,7 +617,7 @@ npm run build
 ```
 
 **2. `.npmrc` の設定確認:**
-- 環境変数 `NODE_AUTH_TOKEN` が正しく参照されていることを確認
+- 環境変数 `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` が正しく参照されていることを確認
 - ローカルでテストする場合は、有効な GitHub PAT を設定
 
 **3. Dry-run での公開テスト:**

@@ -75,7 +75,7 @@ jobs:
         run: |
           npm run ci:publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ===============================
       # Exit pre-release mode

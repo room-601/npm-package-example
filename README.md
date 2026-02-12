@@ -96,7 +96,7 @@ permissions:
 #### 認証
 
 - **`GITHUB_TOKEN`**: GitHub Actions によって自動的に提供
-- **`NODE_AUTH_TOKEN`**: GitHub Packages での認証のために `GITHUB_TOKEN` に設定
+- **`GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN`**: GitHub Packages での認証のために `GITHUB_TOKEN` に設定
 
 追加のシークレット設定は不要です！🎉
 
@@ -132,10 +132,10 @@ GitHub Packages 用の重要な設定：
 
 ```text
 @room-601:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN}
 ```
 
-- `NODE_AUTH_TOKEN` 環境変数を使用
+- `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` 環境変数を使用
 - GitHub Actions では `actions/setup-node` が自動的にこれを提供
 
 ## 🔄 npm レジストリからの移行
@@ -150,7 +150,7 @@ GitHub Packages 用の重要な設定：
 
 #### 2. 認証方式
 - **移行前**: OIDC を使用した npm Trusted Publishing（トークンレス）
-- **移行後**: GitHub Token 認証（`NODE_AUTH_TOKEN`）
+- **移行後**: GitHub Token 認証（`GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN`）
 
 #### 3. アクセス制御
 - **移行前**: `"access": "public"`
@@ -162,7 +162,7 @@ GitHub Packages 用の重要な設定：
 
 #### 5. 環境変数
 - **移行前**: 追加の環境変数不要（OIDC）
-- **移行後**: `NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
+- **移行後**: `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
 
 ### GitHub Packages のメリット
 
