@@ -14,7 +14,7 @@ on:
           - exit
 
 permissions:
-  id-token: write
+  packages: write
   contents: write
   pull-requests: write
 
