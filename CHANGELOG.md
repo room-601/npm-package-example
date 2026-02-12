@@ -1,5 +1,11 @@
 # @kosuketakahashi0410/npm-package-example
 
+## 1.1.0
+
+### Minor Changes
+
+- 3b30260: change function
+
 ## 1.0.3
 
 ### Patch Changes
