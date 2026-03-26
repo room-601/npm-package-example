@@ -1,5 +1,11 @@
 # @room-601/minus
 
+## 2.0.6
+
+### Patch Changes
+
+- a3702c7: test
+
 ## 2.0.5
 
 ### Patch Changes
