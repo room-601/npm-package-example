@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "postpublish": "npm publish --registry https://registry.npmjs.org/ --ignore-scripts --access public"
+    "postpublish": "bash ../../scripts/publish-to-npm.sh"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
