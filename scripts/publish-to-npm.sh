@@ -5,6 +5,7 @@ set -e
 # GitHub Packages へのpublish後に、npmjs へ異なるスコープでpublishします
 
 PACKAGE_JSON="package.json"
+BACKUP_PACKAGE_JSON="package.json.backup"
 TEMP_PACKAGE_JSON="package.json.npm-publish"
 
 # 安全性のため：既存の一時ファイルをクリーンアップ
@@ -12,9 +13,13 @@ if [ -f "$TEMP_PACKAGE_JSON" ]; then
   echo "Cleaning up existing temporary file: $TEMP_PACKAGE_JSON"
   rm "$TEMP_PACKAGE_JSON"
 fi
+if [ -f "$BACKUP_PACKAGE_JSON" ]; then
+  echo "Cleaning up existing backup file: $BACKUP_PACKAGE_JSON"
+  rm "$BACKUP_PACKAGE_JSON"
+fi
 
-# エラー発生時にも一時ファイルを確実に削除
-trap 'rm -f "$TEMP_PACKAGE_JSON"' EXIT
+# エラー発生時にも一時ファイルを確実に削除・復元
+trap 'rm -f "$TEMP_PACKAGE_JSON"; if [ -f "$BACKUP_PACKAGE_JSON" ]; then mv -f "$BACKUP_PACKAGE_JSON" "$PACKAGE_JSON"; fi' EXIT
 
 # 現在のパッケージ名を取得（例: @room-601/add）
 CURRENT_NAME=$(node -p "require('./package.json').name")
@@ -45,13 +50,22 @@ node -e "
   fs.writeFileSync('$TEMP_PACKAGE_JSON', JSON.stringify(pkg, null, 2));
 "
 
-# 一時的なpackage.jsonでnpmjsにpublish
-# --registry フラグで明示的にnpmjsのみを指定
-# --userconfig /dev/null で .npmrc の設定を無視
-npm publish "$TEMP_PACKAGE_JSON" \
+# 元のpackage.jsonをバックアップ
+cp "$PACKAGE_JSON" "$BACKUP_PACKAGE_JSON"
+
+# 変更したpackage.jsonで上書き
+cp "$TEMP_PACKAGE_JSON" "$PACKAGE_JSON"
+
+# npmjsにpublish（現在のディレクトリのpackage.jsonが変更済み）
+# 環境変数で明示的にレジストリを設定し、.npmrcの影響を回避
+NPM_CONFIG_REGISTRY=https://registry.npmjs.org/ \
+NPM_CONFIG_@room-601:registry= \
+npm publish \
   --registry https://registry.npmjs.org/ \
   --ignore-scripts \
-  --access public \
-  --userconfig /dev/null
+  --access public
+
+# 元のpackage.jsonを復元
+mv "$BACKUP_PACKAGE_JSON" "$PACKAGE_JSON"
 
 echo "✓ Successfully published to npmjs as: $NPM_PACKAGE_NAME"
