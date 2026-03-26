@@ -1,5 +1,11 @@
 # @room-601/add
 
+## 2.0.3
+
+### Patch Changes
+
+- a771226: test try
+
 ## 2.0.2
 
 ### Patch Changes
