@@ -47,11 +47,10 @@ jobs:
           fi
       
       # 両方のレジストリに認証情報を設定
-      # これにより、1回目のpublish（GitHub Packages）と
-      # postpublishスクリプトでの2回目のpublish（npmjs）の両方で認証が通る
-      - name: Configure npm authentication for both registries
+      # GitHub Packages用: NODE_AUTH_TOKENはsetup-node@v4で自動設定される
+      # npmjs用: postpublishスクリプト内でNPM_TOKENを使用
+      - name: Configure npm authentication for npmjs
         run: |
-          npm set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
           npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
 
       # ===============================
