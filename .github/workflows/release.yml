@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       published: ${{ steps.changesets.outputs.published }}
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
     permissions:
       contents: write
       packages: write
@@ -71,41 +72,34 @@ jobs:
         with:
           node-version-file: .node-version
           registry-url: https://registry.npmjs.org/
-      
-      - name: Configure npm registry
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build
         run: npm run build
-      
-      - name: Debug npm auth
-        run: |
-          echo "Checking if NPM_TOKEN is set..."
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "ERROR: NODE_AUTH_TOKEN is empty or not set!"
-            exit 1
-          else
-            echo "NODE_AUTH_TOKEN is set (length: ${#NODE_AUTH_TOKEN})"
-          fi
-          echo "Checking npm authentication..."
-          npm whoami --registry https://registry.npmjs.org/
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
+
       - name: Publish to npmjs
         run: |
-          for pkg in packages/*; do
-            if [ -f "$pkg/package.json" ]; then
-              echo "Publishing $pkg to npmjs..."
-              cd "$pkg"
+          PUBLISHED_PACKAGES='${{ needs.publish-github-packages.outputs.publishedPackages }}'
+          
+          if [ "$PUBLISHED_PACKAGES" = "" ] || [ "$PUBLISHED_PACKAGES" = "[]" ]; then
+            echo "No packages were published, skipping npmjs publish"
+            exit 0
+          fi
+          
+          echo "Published packages: $PUBLISHED_PACKAGES"
+          
+          echo "$PUBLISHED_PACKAGES" | jq -c '.[]' | while read -r package; do
+            PACKAGE_NAME=$(echo "$package" | jq -r '.name')
+            PACKAGE_BASE_NAME=$(echo "$PACKAGE_NAME" | awk -F'/' '{print $NF}')
+            
+            PKG_DIR="packages/$PACKAGE_BASE_NAME"
+            
+            if [ -d "$PKG_DIR" ]; then
+              echo "Publishing $PKG_DIR to npmjs..."
+              cd "$PKG_DIR"
               
-              PACKAGE_BASE_NAME=$(node -p "require('./package.json').name.split('/').pop()")
               npm pkg set name="@kosuketakahashi0410/$PACKAGE_BASE_NAME"
               npm pkg set publishConfig.registry='https://registry.npmjs.org/'
               npm pkg set publishConfig.access='public'
@@ -113,6 +107,8 @@ jobs:
               npm publish --ignore-scripts
               
               cd ../..
+            else
+              echo "Warning: Directory $PKG_DIR not found for package $PACKAGE_NAME"
             fi
           done
         env:
