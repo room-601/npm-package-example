@@ -1,21 +1,34 @@
 # npm-package-example
 
-GitHub Packages プライベートレジストリに公開されているシンプルなサンプル npm パッケージです。
+GitHub Packagesとnpmレジストリの両方に公開されているシンプルなサンプル npm パッケージです。
 
 ## 📦 インストール
 
-このパッケージは GitHub Packages にプライベートパッケージとして公開されています。インストールするには、`@room-601` スコープに対して GitHub Packages レジストリを使用するように npm を設定する必要があります。
+このパッケージは **GitHub Packages** と **npm レジストリ**の両方にプライベートパッケージとして公開されています。
 
-### ステップ 1: GitHub Personal Access Token (PAT) の作成
+### オプション 1: npm レジストリからインストール（推奨）
+
+npm レジストリから直接インストールできます。認証が必要です：
+
+```bash
+# npmjs.comでのログインが必要
+npm login
+npm install @room-601/npm-package-example
+```
+
+### オプション 2: GitHub Packages からインストール
+
+GitHub Packages を使用する場合は、以下の設定が必要です：
+
+#### ステップ 1: GitHub Personal Access Token (PAT) の作成
 
 1. GitHub Settings → Developer settings → Personal access tokens → Tokens (classic) に移動
 2. "Generate new token (classic)" をクリック
 3. 以下のスコープを選択：
    - `read:packages` - GitHub Packages からパッケージをダウンロードするために必要
-   - `write:packages` - パッケージを公開する必要がある場合に必要（利用者には不要）
 4. トークンを生成してコピー
 
-### ステップ 2: `.npmrc` の設定
+#### ステップ 2: `.npmrc` の設定
 
 プロジェクトのルートまたはホームディレクトリ（`~/.npmrc`）に `.npmrc` を作成または更新：
 
@@ -26,7 +39,7 @@ GitHub Packages プライベートレジストリに公開されているシン�
 
 **⚠️ 重要**: トークンを含む `.npmrc` を Git にコミットしないでください。`.gitignore` に追加してください。
 
-### ステップ 3: パッケージのインストール
+#### ステップ 3: パッケージのインストール
 
 ```bash
 npm install @room-601/npm-package-example
@@ -42,7 +55,7 @@ console.log(greet('World')); // Hello, World!
 
 ## 🚀 公開方法（メンテナー向け）
 
-このパッケージは、バージョン管理と GitHub Packages への自動公開に [Changesets](https://github.com/changesets/changesets) を使用しています。
+このパッケージは、バージョン管理と自動公開に [Changesets](https://github.com/changesets/changesets) を使用しています。1回の公開で **GitHub Packages** と **npm レジストリ**の両方に自動的に公開されます。
 
 ### 公開ワークフロー
 
@@ -74,11 +87,16 @@ git push
 
 - **Release ワークフロー**: `main` ブランチへのプッシュでトリガー
   - バージョンアップを含む "Version Packages" PR を作成
-  - PR がマージされると、自動的に GitHub Packages に公開
+  - PR がマージされると、自動的に **GitHub Packages** と **npm レジストリ**の両方に公開
 
 - **Pre-release ワークフロー**: プレリリースバージョンのテスト用
   - プレリリースモードに入る：プレリリースバージョンを作成（例：`1.0.4-next.0`）
   - プレリリースモードを終了：通常のバージョニングに戻る
+
+**公開フロー**:
+1. GitHub Packagesに公開（1回目）
+2. `postpublish`スクリプトが自動実行
+3. npmレジストリに公開（2回目）
 
 ### GitHub Actions の設定
 
@@ -93,38 +111,71 @@ permissions:
   pull-requests: write # バージョン PR の作成用
 ```
 
-#### 認証
+#### 必要なシークレット
 
-- **`GITHUB_TOKEN`**: GitHub Actions によって自動的に提供
-- **`GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN`**: GitHub Packages での認証のために `GITHUB_TOKEN` に設定
+**1. GITHUB_TOKEN（自動提供）**
+- GitHub Actions によって自動的に提供
+- GitHub Packages への公開に使用
 
-追加のシークレット設定は不要です！🎉
+**2. NPM_TOKEN（要手動設定）**
+- npm レジストリへの公開に必要
+- 以下の手順で設定してください：
+
+##### NPM_TOKEN の作成手順
+
+1. [npmjs.com](https://www.npmjs.com/)にログイン
+2. Account Settings → Access Tokens → Generate New Token
+3. **Granular Access Token**を選択
+4. 設定内容：
+   - **Token name**: `GitHub Actions CI` (任意の名前)
+   - **Expiration**: 90 days（最大）
+   - **Packages and scopes**: `@room-601/npm-package-example`を選択
+   - **Permissions**: Read and Write
+   - **Bypass 2FA**: 有効化（CI/CD実行に必要）
+5. トークンを生成してコピー
+
+##### GitHubリポジトリにシークレットを追加
+
+1. GitHubリポジトリページにアクセス
+2. Settings → Secrets and variables → Actions
+3. **New repository secret**をクリック
+4. 以下を入力：
+   - **Name**: `NPM_TOKEN`
+   - **Secret**: コピーしたトークンを貼り付け
+5. **Add secret**をクリック
+
+**⚠️ 重要**: Granular Access Tokenは最大90日で期限切れになります。期限が切れる前に新しいトークンを生成して更新してください。
 
 ## 📋 パッケージ設定
 
 ### `package.json` の設定
 
-GitHub Packages 用の重要な設定：
+両方のレジストリに公開するための重要な設定：
 
 ```json
 {
   "name": "@room-601/npm-package-example",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
+    "@room-601:registry": "https://npm.pkg.github.com",
     "access": "restricted"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/room-601/npm-package-example.git"
+  },
+  "scripts": {
+    "postpublish": "npm run publish-npm",
+    "publish-npm": "npm publish --access restricted --ignore-scripts --@room-601:registry='https://registry.npmjs.org'"
   }
 }
 ```
 
 **重要な注意事項：**
 - パッケージ名はスコープ付きである必要があります（`@room-601/...`）
-- スコープは GitHub の organization/username と一致する必要があります
+- `@room-601:registry`：スコープ付きレジストリ設定（changesets 2.30.0+でサポート）
 - `access: "restricted"` でプライベートパッケージになります
-- `registry` は GitHub Packages を指定
+- `postpublish`スクリプト：GitHub Packages公開後、自動的にnpmレジストリにも公開
+- `--ignore-scripts`：無限ループ防止のため、2回目の公開時はスクリプトを実行しない
 
 ### `.npmrc` の設定
 
@@ -138,38 +189,35 @@ GitHub Packages 用の重要な設定：
 - `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN` 環境変数を使用
 - GitHub Actions では `actions/setup-node` が自動的にこれを提供
 
-## 🔄 npm レジストリからの移行
+## 🔄 デュアルレジストリ公開の仕組み
 
-このパッケージは以前、パブリック npm レジストリに公開されていましたが、GitHub Packages プライベートレジストリに移行されました。
+このパッケージは **postpublish** ライフサイクルスクリプトを使用して、1回の公開コマンドで両方のレジストリに自動公開します。
 
-### 主な変更点
+### 公開フロー
 
-#### 1. レジストリ URL
-- **移行前**: `https://registry.npmjs.org`
-- **移行後**: `https://npm.pkg.github.com`
+```
+npm run ci:publish（changesets publish）
+    ↓
+【1回目】GitHub Packagesに公開
+    ↓
+成功すると postpublish スクリプトが自動実行
+    ↓
+【2回目】npmレジストリに公開（--ignore-scripts で無限ループ防止）
+    ↓
+✅ 両方のレジストリで利用可能
+```
 
-#### 2. 認証方式
-- **移行前**: OIDC を使用した npm Trusted Publishing（トークンレス）
-- **移行後**: GitHub Token 認証（`GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN`）
+### 各レジストリの特徴
 
-#### 3. アクセス制御
-- **移行前**: `"access": "public"`
-- **移行後**: `"access": "restricted"`
+**GitHub Packages:**
+- GitHub組織のアクセス制御と統合
+- `GITHUB_TOKEN`で認証（追加設定不要）
+- リポジトリと同じ権限管理
 
-#### 4. GitHub Actions の権限
-- **移行前**: `id-token: write`（OIDC 用）
-- **移行後**: `packages: write`（GitHub Packages 用）
-
-#### 5. 環境変数
-- **移行前**: 追加の環境変数不要（OIDC）
-- **移行後**: `GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
-
-### GitHub Packages のメリット
-
-✅ **デフォルトでプライベート** - 内部パッケージのセキュリティ向上  
-✅ **GitHub と統合** - 同じ認証と権限管理  
-✅ **追加トークン不要** - Actions で `GITHUB_TOKEN` を使用  
-✅ **きめ細かいアクセス制御** - GitHub リポジトリの権限で管理  
+**npm レジストリ:**
+- 広く使われている標準的なレジストリ
+- `NPM_TOKEN`（Granular Access Token）で認証
+- npmjs.comのアカウントでアクセス管理  
 
 ## 🛠️ 開発
 
@@ -193,6 +241,7 @@ npm run build
 - `npm run build` - TypeScript を JavaScript にコンパイル
 - `npm run ci:version` - パッケージのバージョン管理（CI で使用）
 - `npm run ci:publish` - パッケージの公開（CI で使用）
+- `npm run publish-npm` - npmレジストリへの公開（postpublishから自動実行）
 
 ## 📝 ライセンス
 

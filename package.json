@@ -1,24 +1,19 @@
 {
+  "name": "npm-package-example-root",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Monorepo for npm package examples",
   "author": "KosukeTakahashi0410",
   "license": "MIT",
-  "name": "@room-601/npm-package-example",
-  "version": "1.1.0",
-  "description": "A simple example npm package",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
+  "workspaces": [
+    "packages/*"
   ],
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/room-601/npm-package-example.git"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build --workspaces",
     "ci:version": "changeset version",
     "ci:publish": "changeset publish"
   },
