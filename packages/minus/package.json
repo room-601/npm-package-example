@@ -17,8 +17,7 @@
     "directory": "packages/minus"
   },
   "scripts": {
-    "build": "tsc",
-    "postpublish": "bash ../../scripts/publish-to-npm.sh"
+    "build": "tsc"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

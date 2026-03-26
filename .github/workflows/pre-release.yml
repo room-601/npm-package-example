@@ -46,12 +46,6 @@ jobs:
             echo "Changeset files found. Proceeding with version update."
           fi
       
-      # 両方のレジストリに認証情報を設定
-      # GitHub Packages用: NODE_AUTH_TOKENはsetup-node@v4で自動設定される
-      # npmjs用: postpublishスクリプト内でNPM_TOKENを使用
-      - name: Configure npm authentication for npmjs
-        run: |
-          npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
 
       # ===============================
       # Enter pre-release mode
@@ -77,13 +71,34 @@ jobs:
             echo "No changes to commit"
           fi
 
-      - name: Publish pre-release
+      - name: Publish pre-release to GitHub Packages
         if: inputs.actions == 'enter-and-publish' && steps.check-changesets.outputs.has_changesets == 'true'
         run: |
-          npm run ci:publish
+          npm run ci:publish -- --ignore-scripts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish pre-release to npmjs
+        if: inputs.actions == 'enter-and-publish' && steps.check-changesets.outputs.has_changesets == 'true'
+        run: |
+          for pkg in packages/*; do
+            if [ -f "$pkg/package.json" ]; then
+              echo "Publishing $pkg to npmjs..."
+              cd "$pkg"
+              
+              PACKAGE_BASE_NAME=$(node -p "require('./package.json').name.split('/').pop()")
+              npm pkg set name="@kosuketakahashi0410/$PACKAGE_BASE_NAME"
+              npm pkg set publishConfig.registry='https://registry.npmjs.org/'
+              npm pkg set publishConfig.access='public'
+              
+              npm publish --ignore-scripts
+              
+              cd ../..
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # ===============================
       # Exit pre-release mode
