@@ -60,7 +60,16 @@ if [ -f "$NPMRC_FILE" ]; then
   rm "$NPMRC_FILE"
 fi
 
-# npmjsにpublish（package.jsonとpublishConfigが変更済み、.npmrcも削除済み）
+# npmjs用の新しい.npmrcを作成（認証トークンを含む）
+# NPM_TOKENが設定されている場合のみ
+if [ -n "$NPM_TOKEN" ]; then
+  echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > "$NPMRC_FILE"
+  echo "Created temporary .npmrc for npmjs authentication"
+else
+  echo "Warning: NPM_TOKEN is not set. Publishing may require authentication."
+fi
+
+# npmjsにpublish（package.jsonとpublishConfigが変更済み、.npmrcも再作成済み）
 npm publish --ignore-scripts
 
 # 元のファイルを復元
