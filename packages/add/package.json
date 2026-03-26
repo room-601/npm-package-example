@@ -1,6 +1,6 @@
 {
   "name": "@room-601/add",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "Addition utility function",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
