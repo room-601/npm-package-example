@@ -47,6 +47,11 @@ node -e "
 
 # 一時的なpackage.jsonでnpmjsにpublish
 # --registry フラグで明示的にnpmjsのみを指定
-npm publish "$TEMP_PACKAGE_JSON" --registry https://registry.npmjs.org/ --ignore-scripts --access public
+# --userconfig /dev/null で .npmrc の設定を無視
+npm publish "$TEMP_PACKAGE_JSON" \
+  --registry https://registry.npmjs.org/ \
+  --ignore-scripts \
+  --access public \
+  --userconfig /dev/null
 
 echo "✓ Successfully published to npmjs as: $NPM_PACKAGE_NAME"
