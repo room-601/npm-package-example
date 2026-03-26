@@ -45,6 +45,14 @@ jobs:
             echo "has_changesets=true" >> $GITHUB_OUTPUT
             echo "Changeset files found. Proceeding with version update."
           fi
+      
+      # 両方のレジストリに認証情報を設定
+      # これにより、1回目のpublish（GitHub Packages）と
+      # postpublishスクリプトでの2回目のpublish（npmjs）の両方で認証が通る
+      - name: Configure npm authentication for both registries
+        run: |
+          npm set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
+          npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
 
       # ===============================
       # Enter pre-release mode
@@ -75,7 +83,8 @@ jobs:
         run: |
           npm run ci:publish
         env:
-          GITHUB_PACKAGES_NPM_PUBLISH_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ===============================
       # Exit pre-release mode

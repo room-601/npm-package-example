@@ -1,0 +1,26 @@
+{
+  "name": "@room-601/minus",
+  "version": "1.0.0",
+  "description": "Subtraction utility function",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/room-601/npm-package-example.git",
+    "directory": "packages/minus"
+  },
+  "scripts": {
+    "build": "tsc",
+    "postpublish": "npm publish --registry https://registry.npmjs.org/ --ignore-scripts --access public"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
