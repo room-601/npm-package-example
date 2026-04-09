@@ -1,5 +1,11 @@
 # @room-601/minus
 
+## 2.0.14
+
+### Patch Changes
+
+- 6fa662b: test
+
 ## 2.0.13
 
 ### Patch Changes
