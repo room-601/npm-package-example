@@ -1,5 +1,11 @@
 # @room-601/minus
 
+## 2.0.15
+
+### Patch Changes
+
+- ea66bc1: test
+
 ## 2.0.14
 
 ### Patch Changes
