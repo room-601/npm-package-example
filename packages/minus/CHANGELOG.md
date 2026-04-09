@@ -1,5 +1,11 @@
 # @room-601/minus
 
+## 2.0.8
+
+### Patch Changes
+
+- 8145fc8: test
+
 ## 2.0.7
 
 ### Patch Changes
