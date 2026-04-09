@@ -78,7 +78,7 @@ jobs:
       - name: Pre setting for npmjs.org
         run: |
           for file in packages/*/package.json; do
-            jq '.name = (.name | gsub("@room-601/";"@kosuketakahashi0410/")) | .publishConfig.access = "public"' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+            jq '.name = (.name | gsub("@room-601/";"@kosuketakahashi0410/")) | .publishConfig.access = "public" | .publishConfig.registry = "https://registry.npmjs.org/"' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
           done
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
