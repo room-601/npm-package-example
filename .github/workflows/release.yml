@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env:
-  NPM_TOKEN: ${{ secrets.PUBLISH_NPM_TOKEN }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
   GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -84,6 +84,27 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add packages/*/package.json
           git commit -m "temp: change package names for npmjs.org [skip ci]"
+      
+      - name: Debug - Check npm configuration
+        run: |
+          echo "=== npm whoami ==="
+          npm whoami || echo "Not logged in"
+          echo ""
+          echo "=== npm config list ==="
+          npm config list
+          echo ""
+          echo "=== Check .npmrc ==="
+          cat ~/.npmrc || echo "No ~/.npmrc file"
+          echo ""
+          echo "=== Package.json contents ==="
+          for file in packages/*/package.json; do
+            echo "--- $file ---"
+            cat "$file"
+            echo ""
+          done
+          echo ""
+          echo "=== Environment variables (filtered) ==="
+          env | grep -E '(NPM|NODE_AUTH)' || echo "No NPM related env vars"
       
       - name: Publish
         run: npx lerna publish from-package --yes --preid alpha --pre-dist-tag alpha --no-verify-access
