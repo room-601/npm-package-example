@@ -13,6 +13,8 @@ jobs:
   # GitHub Packagesへの公開
   release:
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
     permissions:
       contents: write
       packages: write
@@ -20,7 +22,7 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v5
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -34,11 +36,24 @@ jobs:
       - name: Build
         run: npm run build
       
+      - name: Create Release Pull Request or Version Packages
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: npm run version
+          commit: "chore: version packages"
+          title: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Publish
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: npx lerna publish from-package --yes --preid alpha --pre-dist-tag alpha --no-verify-access
 
   # npmjs.orgへの公開
   release-to-npm:
+    needs: release
+    if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -46,7 +61,7 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v5
-      
+
       - name: Pre setting for npmjs.org
         run: |
           for file in packages/*/package.json; do
