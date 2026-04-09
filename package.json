@@ -13,13 +13,14 @@
     "url": "https://github.com/room-601/npm-package-example.git"
   },
   "scripts": {
-    "build": "npm run build --workspaces",
-    "ci:version": "changeset version",
-    "ci:publish": "changeset publish"
+    "build": "lerna run build",
+    "changeset": "changeset",
+    "version": "changeset version"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
     "@types/node": "^24.6.2",
+    "lerna": "^4.0.0",
     "typescript": "^5.9.3",
     "undici-types": "^7.13.0"
   }

@@ -1,115 +1,70 @@
-name: Release
+name: release
 
 on:
   workflow_call:
 
+env:
+  NPM_TOKEN: ${{ secrets.PUBLISH_NPM_TOKEN }}
+  GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  build:
+  # GitHub Packagesへの公開
+  release:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Build
-        run: npm run build
-
-  publish-github-packages:
-    needs: build
-    runs-on: ubuntu-latest
-    outputs:
-      published: ${{ steps.changesets.outputs.published }}
-      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
     permissions:
       contents: write
       packages: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout Repo
+        uses: actions/checkout@v5
       
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           registry-url: https://npm.pkg.github.com
           scope: '@room-601'
       
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
       
       - name: Build
         run: npm run build
       
-      - name: Create Release Pull Request or Publish to GitHub Packages
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: npm run ci:version
-          publish: npm run ci:publish -- --ignore-scripts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish
+        run: npx lerna publish from-package --yes --preid alpha --pre-dist-tag alpha --no-verify-access
 
-  publish-npm:
-    needs: publish-github-packages
+  # npmjs.orgへの公開
+  release-to-npm:
     runs-on: ubuntu-latest
-    if: needs.publish-github-packages.outputs.published == 'true'
+    permissions:
+      contents: write
+      packages: write
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout Repo
+        uses: actions/checkout@v5
       
-      - name: Setup Node.js
+      - name: Pre setting for npmjs.org
+        run: |
+          for file in packages/*/package.json; do
+            jq '.name = (.name | gsub("@room-601/";"@kosuketakahashi0410/")) | .publishConfig.access = "public"' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+          done
+      
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          registry-url: https://registry.npmjs.org/
-
-      - name: Install dependencies
+          registry-url: https://registry.npmjs.org
+          scope: '@kosuketakahashi0410'
+      
+      - name: Install Dependencies
         run: npm ci
-
+      
       - name: Build
         run: npm run build
-
-      - name: Publish to npmjs
-        run: |
-          PUBLISHED_PACKAGES='${{ needs.publish-github-packages.outputs.publishedPackages }}'
-          
-          if [ "$PUBLISHED_PACKAGES" = "" ] || [ "$PUBLISHED_PACKAGES" = "[]" ]; then
-            echo "No packages were published, skipping npmjs publish"
-            exit 0
-          fi
-          
-          echo "Published packages: $PUBLISHED_PACKAGES"
-          
-          echo "$PUBLISHED_PACKAGES" | jq -c '.[]' | while read -r package; do
-            PACKAGE_NAME=$(echo "$package" | jq -r '.name')
-            PACKAGE_BASE_NAME=$(echo "$PACKAGE_NAME" | awk -F'/' '{print $NF}')
-            
-            PKG_DIR="packages/$PACKAGE_BASE_NAME"
-            
-            if [ -d "$PKG_DIR" ]; then
-              echo "Publishing $PKG_DIR to npmjs..."
-              cd "$PKG_DIR"
-              
-              npm pkg set name="@kosuketakahashi0410/$PACKAGE_BASE_NAME"
-              npm pkg set publishConfig.registry='https://registry.npmjs.org/'
-              npm pkg set publishConfig.access='public'
-              
-              npm publish --ignore-scripts
-              
-              cd ../..
-            else
-              echo "Warning: Directory $PKG_DIR not found for package $PACKAGE_NAME"
-            fi
-          done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Publish
+        run: npx lerna publish from-package --yes --preid alpha --pre-dist-tag alpha --no-verify-access
