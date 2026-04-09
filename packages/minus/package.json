@@ -1,6 +1,6 @@
 {
   "name": "@room-601/minus",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "description": "Subtraction utility function",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
